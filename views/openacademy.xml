@@ -132,11 +132,11 @@
         </record>
 
         <!-- Menu root(Aparecera en la barra superior con todas las app) -->
-        <menuitem name="Open Academy" id="openacademy.course_main_menu"/>
+        <menuitem name="Open Academy" id="openacademy.main_openacademy_menu"/>
 
         <!-- Menu lateral que ara de encabezado -->
         <menuitem id="openacademy_menu" name="Open Academy"
-                  parent="openacademy.course_main_menu"/>
+                  parent="openacademy.main_openacademy_menu"/>
 
         <!-- Menu lateral que desplegara el accion de ventana con
          el view determiando en el campo view_mode.-->
