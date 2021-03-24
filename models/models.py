@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import random
-from odoo import models, fields, api
+from odoo import models, fields, api, exceptions
 
 class Course(models.Model):
     _name = 'openacademy.course'
@@ -15,9 +14,42 @@ class Course(models.Model):
     session_id = fields.One2many(
         'openacademy.session', 'course_id', string="Sessions")
 
+    # Restricciones de SQL
+    _sql_constraints = [
+        ('name_description_check',
+         'CHECK(name != description)',
+         'The title of the course should not be the description'),
+
+        ('name_unique',
+         'UNIQUE(name)',
+         "The course tittle mut be unique"),
+    ]
+
+    # Campos para probar el Onchange
     amount = fields.Integer()
     unit_price = fields.Integer()
     price = fields.Integer()
+
+
+    # ---------------- MÉTODOS ----------------
+
+    @api.multi
+    def copy(self, default=None):
+        default = dict(default or {})
+
+        copied_count = self.search_count(
+            [('name', '=like', u"Copy of {}%".format(self.name))]
+        )
+
+        if not copied_count:
+            new_name = u"Copy of {}".format(self.name)
+        else:
+            new_name = u"Copy of {} ({})".format(self.name, copied_count)
+
+        default['name'] = new_name
+        return super(Course, self).copy(default)
+
+
 
     @api.onchange('amount', 'unit_price')
     def _onchange_price(self):
@@ -80,4 +112,10 @@ class Session(models.Model):
                     'message': "Increse seats or remove excess attendees",
                 },
             }
+
+    @api.constrains('instructor_id', 'attendee_ids')
+    def _check_instructor_not_in_attendees(self):
+        for r in self:
+            if r.instructor_id and r.instructor_id in r.attendee_ids:
+                raise exceptions.ValidationError("A session's instructor can't be an attendee")
 
