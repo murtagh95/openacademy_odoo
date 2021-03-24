@@ -84,6 +84,8 @@
                             <field name="start_date"/>
                             <field name="duration"/>
                             <field name="seats"/>
+                            <field name="active"/>
+                            <field name="taken_seats" widget="progressbar"/>
                         </group>
                     </sheet>
                 </form>
@@ -99,8 +101,8 @@
                     <field name="name"/>
                     <field name="course_id"/>
                     <field name="start_date"/>
-                    <field name="duration"/>
                     <field name="seats"/>
+                    <field name="taken_seats" widget="progressbar"/>
                 </tree>
             </field>
         </record>

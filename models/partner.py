@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from pygments.lexer import _inherit
 
 from odoo import models, fields
 
