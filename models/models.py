@@ -15,6 +15,24 @@ class Course(models.Model):
     session_id = fields.One2many(
         'openacademy.session', 'course_id', string="Sessions")
 
+    amount = fields.Integer()
+    unit_price = fields.Integer()
+    price = fields.Integer()
+
+    @api.onchange('amount', 'unit_price')
+    def _onchange_price(self):
+        # set auto-chaging field
+        self.price = self.amount * self.unit_price
+        # Can optionally return a warning and domains
+        # Opcionalmente, puede devolver una advertencia y dominios.
+        # return {
+        #     'warning': {
+        #         'title': "Something bad happened",
+        #         'message': "It was very bad indeed",
+        #     },
+        # }
+
+
 class Session(models.Model):
     _name = 'openacademy.session'
 
@@ -44,3 +62,22 @@ class Session(models.Model):
             # Calculo el porcentaje de sillas
             else:
                 r.taken_seats = 100 * len(r.attendee_ids) / r.seats
+
+    @api.onchange('seats', 'attendee_ids')
+    def _verify_valid_seats(self):
+        if self.seats < 0:
+            self.seats = 0
+            return {
+                'warning': {
+                    'title': "Incorrect 'seats' value",
+                    'message': "The number of available seats my no be negative"
+                },
+            }
+        if self.seats < len(self.attendee_ids):
+            return {
+                'warning': {
+                    'title': "Too many attendees",
+                    'message': "Increse seats or remove excess attendees",
+                },
+            }
+
