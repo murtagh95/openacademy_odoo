@@ -53,7 +53,10 @@
             <field name="name">openacademy.course.tree</field>
             <field name="model">openacademy.course</field>
             <field name="arch" type="xml">
-                <tree string="ModelTitle">
+            <!-- Con editable dejamos modificar los campos desde
+            la vista tree por lo tanto no re direje a la vista form-->
+                <tree string="ModelTitle"
+                      editable="bottom">
                     <field name="name"/>
                     <field name="description" widget="html"/>
                     <field name="responsible_id"/>
@@ -73,48 +76,6 @@
             </field>
         </record>
 
-        <!-- Vistas para Session -->
-        <!-- Vista de tipo Formulario -->
-        <record id="session_view_form" model="ir.ui.view">
-            <field name="name">session_view_form</field>
-            <field name="model">openacademy.session</field>
-            <field name="arch" type="xml">
-                <form string="session_form">
-                    <sheet>
-                        <group string="General">
-                            <field name="course_id"/>
-                            <field name="name"/>
-                            <field name="instructor_id"/>
-                            <field name="attendee_ids" widget="many2many_tags"/>
-                        </group>
-
-                        <group string="General">
-                            <field name="start_date"/>
-                            <field name="duration"/>
-                            <field name="seats"/>
-                            <field name="active"/>
-                            <field name="taken_seats" widget="progressbar"/>
-                        </group>
-                    </sheet>
-                </form>
-            </field>
-        </record>
-
-        <!-- Vista de tipo Tree/lista -->
-        <record id="session_view_tree" model="ir.ui.view">
-            <field name="name">session_view_tree</field>
-            <field name="model">openacademy.session</field>
-            <field name="arch" type="xml">
-                <tree string="session_tree">
-                    <field name="name"/>
-                    <field name="course_id"/>
-                    <field name="start_date"/>
-                    <field name="seats"/>
-                    <field name="taken_seats" widget="progressbar"/>
-                </tree>
-            </field>
-        </record>
-        
         
         <!-- window action -->
         <!--
@@ -133,13 +94,7 @@
                 </p>
             </field>
         </record>
-        <record id="session_list_action" model="ir.actions.act_window">
-            <field name="name">Session</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">openacademy.session</field>
-            <field name="view_type">form</field>
-            <field name="view_mode">tree,form</field>
-        </record>
+
 
         <!-- Menu root(Aparecera en la barra superior con todas las app) -->
         <menuitem name="Open Academy" id="openacademy.main_openacademy_menu"/>
@@ -152,9 +107,6 @@
          el view determiando en el campo view_mode.-->
         <menuitem id="course_manu" name="Courses"
                   parent="openacademy_menu" action="openacademy.course_act_window"/>
-
-        <menuitem id="session_menu" name="Session"
-                  parent="openacademy_menu" action="session_list_action"/>
 
     </data>
 </odoo>

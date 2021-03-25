@@ -1,68 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from datetime import timedelta
 from odoo import models, fields, api, exceptions
-
-class Course(models.Model):
-    _name = 'openacademy.course'
-    _description = 'Guardamos todos los cursos disponibles'
-
-    name = fields.Char(string="Title", required=True)
-    description = fields.Text(string="Description")
-
-    responsible_id = fields.Many2one('res.users',
-                   ondelete="set null", string="Responsible", index=True)
-    session_id = fields.One2many(
-        'openacademy.session', 'course_id', string="Sessions")
-
-    # Restricciones de SQL
-    _sql_constraints = [
-        ('name_description_check',
-         'CHECK(name != description)',
-         'The title of the course should not be the description'),
-
-        ('name_unique',
-         'UNIQUE(name)',
-         "The course tittle mut be unique"),
-    ]
-
-    # Campos para probar el Onchange
-    amount = fields.Integer()
-    unit_price = fields.Integer()
-    price = fields.Integer()
-
-
-    # ---------------- MÉTODOS ----------------
-
-    @api.multi
-    def copy(self, default=None):
-        default = dict(default or {})
-
-        copied_count = self.search_count(
-            [('name', '=like', u"Copy of {}%".format(self.name))]
-        )
-
-        if not copied_count:
-            new_name = u"Copy of {}".format(self.name)
-        else:
-            new_name = u"Copy of {} ({})".format(self.name, copied_count)
-
-        default['name'] = new_name
-        return super(Course, self).copy(default)
-
-
-
-    @api.onchange('amount', 'unit_price')
-    def _onchange_price(self):
-        # set auto-chaging field
-        self.price = self.amount * self.unit_price
-        # Can optionally return a warning and domains
-        # Opcionalmente, puede devolver una advertencia y dominios.
-        # return {
-        #     'warning': {
-        #         'title': "Something bad happened",
-        #         'message': "It was very bad indeed",
-        #     },
-        # }
 
 
 class Session(models.Model):
@@ -75,6 +14,9 @@ class Session(models.Model):
     active = fields.Boolean(default=True)
     taken_seats = fields.Float(string="Taken seats",
                                       compute="_taken_seats")
+    end_date = fields.Date(string="End Date", store=True,
+                           compute='_get_end_date',
+                           inverse='_set_end_date')
 
     instructor_id = fields.Many2one('res.partner', string="Instructor",
                     domain=['|',
@@ -84,6 +26,8 @@ class Session(models.Model):
     course_id = fields.Many2one('openacademy.course', ondelete="cascade",
                                 string="Course", required=True)
     attendee_ids = fields.Many2many('res.partner', string="attendee")
+
+    # ------------------ MÉTODOS ------------------
 
     @api.depends('seats', 'attendee_ids')
     def _taken_seats(self):
@@ -118,4 +62,37 @@ class Session(models.Model):
         for r in self:
             if r.instructor_id and r.instructor_id in r.attendee_ids:
                 raise exceptions.ValidationError("A session's instructor can't be an attendee")
+
+    @api.depends('start_date', 'duration')
+    def _get_end_date(self):
+        for r in self:
+            # Si la duracion y el día inciasl estan vacios
+            # le damos el mismo dia de inidio al dia final
+            if not (r.start_date and r.duration):
+                r.end_date = r.start_date
+                continue
+
+            # Add duration to start_date, but: Monday + 5 days = Saturday, so
+            # subtract one second to get on Friday instead
+            start = fields.Datetime.from_string(r.start_date)
+            duration = timedelta(days=r.duration, seconds=-1)
+            r.end_date = start + duration
+            print("start: ", start)
+            print("type de start: ", type(start))
+            print("duration: ", duration)
+
+    def _set_end_date(self):
+        for r in self:
+            if not (r.start_date and r.duration):
+                r.end_date = r.start_date
+                continue
+            # Compute the difference between dates, but: Friday - Monday = 4 days,
+            # so add one day to get 5 days instead
+            start_date = fields.Datetime.from_string(r.start_date)
+            end_date = fields.Datetime.from_string(r.end_date)
+            print("start_date: ", start_date)
+            print("end_date: ", end_date)
+            print("total: ", (end_date - start_date).days)
+            r.duration = (end_date - start_date).days + 1
+
 
